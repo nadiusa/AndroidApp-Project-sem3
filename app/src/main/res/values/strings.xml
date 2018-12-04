@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ScanMyId</string>
+    <string name="action_settings">Settings</string>
+    <string name="upload_an_image_label">Take a picture</string>
+    <string name="scan_id_label">Scan Id</string>
+    <string name="take_photo_label">Take photo</string>
+</resources>
