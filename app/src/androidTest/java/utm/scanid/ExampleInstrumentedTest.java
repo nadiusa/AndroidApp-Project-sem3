@@ -1,4 +1,4 @@
-package utm.scanmyid;
+package utm.scanid;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

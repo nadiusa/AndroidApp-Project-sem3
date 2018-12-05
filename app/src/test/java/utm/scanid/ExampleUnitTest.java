@@ -1,4 +1,4 @@
-package utm.scanmyid;
+package utm.scanid;
 
 import org.junit.Test;
 
