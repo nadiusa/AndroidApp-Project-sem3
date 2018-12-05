@@ -18,48 +18,48 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import org.json.JSONObject;
+
+import static utm.scanmyid.FileUtils.fromFileToBytes;
 
 public class MainActivity extends AppCompatActivity {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private ImageView imageView;
-    private Button takePictureButton;
     private Button scanIdButton;
     private TextView uploadImageLabel;
     private String currentPhotoPath;
+    private CompositeDisposable compositeDisposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        compositeDisposable = new CompositeDisposable();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         imageView = findViewById(R.id.passport_image_scan);
-        takePictureButton = findViewById(R.id.take_picture_button);
+        Button takePictureButton = findViewById(R.id.take_picture_button);
         scanIdButton = findViewById(R.id.scan_id_button);
         uploadImageLabel = findViewById(R.id.info_label);
 
-        takePictureButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                takePictureIntent();
-            }
-        });
-        scanIdButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendToServer();
-            }
-        });
+        takePictureButton.setOnClickListener(view -> takePictureIntent());
+        scanIdButton.setOnClickListener(view -> sendToServer());
+
+        scanIdButton.setEnabled(false);
 
         //Check for camera permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -103,7 +103,50 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendToServer() {
+        compositeDisposable.add(sendImageToServer(currentPhotoPath)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe(disposable -> onLoad())
+            .doOnTerminate(() -> onLoadComplete())
+            .subscribe(this::doneProcessing, this::onError));
+    }
 
+    public void onLoad() {
+
+    }
+
+    public void onLoadComplete() {
+
+    }
+
+    public void onError(Throwable throwable) {
+
+    }
+
+    public void doneProcessing(Boolean result) {
+
+    }
+
+    public Observable<Boolean> sendImageToServer(String currentPhotoPath) {
+        return Observable.create(subscriber -> {
+            try {
+                File file = new File(currentPhotoPath);
+                OutputStream outputStream;
+                Socket socket;
+                JSONObject jsonObject = new JSONObject();
+                String hostname = "192.168.103.158";
+                int port = 4000;
+                jsonObject.put("firstImage", android.util.Base64.encodeToString(fromFileToBytes(file), android.util.Base64.DEFAULT));
+                socket = new Socket(hostname, port);
+                outputStream = socket.getOutputStream();
+                outputStream.write(jsonObject.toString().getBytes());
+                socket.close();
+                subscriber.onNext(false);
+                subscriber.onComplete();
+            } catch (Throwable e) {
+                subscriber.onError(e);
+            }
+        });
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -114,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadImage(String pathImagePath) {
         uploadImageLabel.setVisibility(View.GONE);
+        scanIdButton.setEnabled(true);
         Glide.with(this)
                 .load(pathImagePath)
                 .apply(new RequestOptions().placeholder(R.drawable.ic_camera))
