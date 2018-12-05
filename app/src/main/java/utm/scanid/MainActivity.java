@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                 File photoFile = createImageFile();
                 if (photoFile != null) {
                     frontPhotoFilePath = photoFile.getAbsolutePath();
-                    Uri photoURI = FileProvider.getUriForFile(this, "utm.scanmyid", photoFile);
+                    Uri photoURI = FileProvider.getUriForFile(this, "utm.scanid", photoFile);
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_FRONT);
                 }
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 File photoFile = createImageFile();
                 if (photoFile != null) {
                     backPhotoFilePath = photoFile.getAbsolutePath();
-                    Uri photoURI = FileProvider.getUriForFile(this, "utm.scanmyid", photoFile);
+                    Uri photoURI = FileProvider.getUriForFile(this, "utm.scanid", photoFile);
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_BACK);
                 }

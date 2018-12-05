@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "utm.scanmyid"
+        applicationId "utm.scanid"
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
