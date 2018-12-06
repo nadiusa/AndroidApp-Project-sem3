@@ -25,7 +25,11 @@
             </intent-filter>
         </activity>
 
-        <provider
+      <activity android:screenOrientation="landscape" android:name=".TakePicturesActivity"/>
+
+      <activity android:screenOrientation="portrait" android:name=".OpenImage"/>
+
+      <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="utm.scanid"
             android:exported="false"
