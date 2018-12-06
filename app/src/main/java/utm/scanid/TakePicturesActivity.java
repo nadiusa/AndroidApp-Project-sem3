@@ -1,14 +1,15 @@
 package utm.scanid;
 
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.otaliastudios.cameraview.CameraListener;
 import com.otaliastudios.cameraview.CameraUtils;
 import com.otaliastudios.cameraview.CameraView;
@@ -17,23 +18,21 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import java.io.File;
-import java.io.OutputStream;
-import java.net.Socket;
-import org.json.JSONObject;
+import java.io.FileOutputStream;
 
-import static utm.scanid.FileUtils.fromFileToBytes;
+import static utm.scanid.MainActivity.FILE_URI;
 
 public class TakePicturesActivity extends AppCompatActivity {
-  static final String FILE_URL_PARAM = "file_url";
-
-  public static Intent init(Context context, String fileUrl) {
-    Intent intent = new Intent(context, TakePicturesActivity.class);
-    intent.putExtra(FILE_URL_PARAM, fileUrl);
-    return intent;
-  }
-
   CameraView camera;
   private CompositeDisposable compositeDisposable;
+  private Bitmap bitmapResult;
+  private ProgressBar progressBar;
+  private Button makePhotoButton;
+  private Button confirmButton;
+  private Button cancelButton;
+  private TextView quiestionBox;
+  private ImageView imageView;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -41,21 +40,26 @@ public class TakePicturesActivity extends AppCompatActivity {
     compositeDisposable = new CompositeDisposable();
     camera = findViewById(R.id.camera);
     camera.setLifecycleOwner(this);
-    final Button makePhotoButton = findViewById(R.id.makePhoto);
-    final Button confirmButton = findViewById(R.id.confirm);
-    final Button cancelButton = findViewById(R.id.cancel);
-    final TextView quiestionBox = findViewById(R.id.quiestion);
-    final ImageView imageView = findViewById(R.id.image);
+    makePhotoButton = findViewById(R.id.makePhoto);
+    confirmButton = findViewById(R.id.confirm);
+    cancelButton = findViewById(R.id.cancel);
+    quiestionBox = findViewById(R.id.quiestion);
+    imageView = findViewById(R.id.image);
+    progressBar = findViewById(R.id.progressBar);
+    progressBar.setVisibility(View.GONE);
     makePhotoButton.setVisibility(View.VISIBLE);
     cancelButton.setVisibility(View.INVISIBLE);
     confirmButton.setVisibility(View.INVISIBLE);
     quiestionBox.setVisibility(View.INVISIBLE);
     imageView.setVisibility(View.INVISIBLE);
-
+    final Uri fileUri = getIntent().getParcelableExtra(FILE_URI);
     camera.addCameraListener(new CameraListener() {
       @Override
       public void onPictureTaken(final byte[] picture) {
-        CameraUtils.decodeBitmap(picture, bitmap -> imageView.setImageBitmap(bitmap));
+        CameraUtils.decodeBitmap(picture, bitmap -> {
+          bitmapResult = bitmap;
+          imageView.setImageBitmap(bitmap);
+        });
       }
     });
 
@@ -76,6 +80,7 @@ public class TakePicturesActivity extends AppCompatActivity {
       cancelButton.setVisibility(View.INVISIBLE);
       confirmButton.setVisibility(View.INVISIBLE);
       quiestionBox.setVisibility(View.INVISIBLE);
+      saveImageInFile(bitmapResult, fileUri);
     });
 
     cancelButton.setOnClickListener(v -> {
@@ -86,33 +91,47 @@ public class TakePicturesActivity extends AppCompatActivity {
     });
   }
 
-  private void saveImageInFile(String fileUrl) {
-    //compositeDisposable.add(sendImageToServer(frontPhotoFilePath, backPhotoFilePath)
-    //    .subscribeOn(Schedulers.io())
-    //    .observeOn(AndroidSchedulers.mainThread())
-    //    .doOnSubscribe(disposable -> onLoad())
-    //    .doOnTerminate()
-    //    .subscribe(this::doneProcessing, this::onError));
+  private void saveImageInFile(Bitmap bitmap, Uri uri) {
+    File file = new File(uri.getPath());
+    if (bitmap != null && file.exists()) {
+      compositeDisposable.add(sendImageToServer(bitmap, file).subscribeOn(Schedulers.io())
+          .observeOn(AndroidSchedulers.mainThread())
+          .doOnSubscribe(disposable -> onLoad())
+          .doOnTerminate(this::onTerminate)
+          .subscribe(result -> doneProcessing(), error -> onError()));
+    } else {
+      showCameraVisible();
+    }
   }
 
+  public void showCameraVisible() {
+    makePhotoButton.setVisibility(View.VISIBLE);
+    cancelButton.setVisibility(View.VISIBLE);
+    confirmButton.setVisibility(View.INVISIBLE);
+    camera.setVisibility(View.VISIBLE);
+    quiestionBox.setVisibility(View.INVISIBLE);
+    imageView.setVisibility(View.INVISIBLE);
+  }
 
-  public Observable<Boolean> sendImageToServer(String firstPhotoPath, String secondPhotoPath) {
+  public void onTerminate() {
+    progressBar.setVisibility(View.GONE);
+  }
+
+  public void onLoad() {
+    progressBar.setVisibility(View.VISIBLE);
+  }
+
+  public void onError() {
+    Toast.makeText(this, R.string.something_went_wrong_label, Toast.LENGTH_LONG).show();
+    showCameraVisible();
+  }
+
+  public Observable<Boolean> sendImageToServer(Bitmap bitmap, File file) {
     return Observable.create(subscriber -> {
       try {
-        File firstPathFile = new File(firstPhotoPath);
-        File secondPathFile = new File(secondPhotoPath);
-        OutputStream outputStream;
-        Socket socket;
-        JSONObject jsonObject = new JSONObject();
-        String hostname = "192.168.103.158";
-        int port = 4000;
-        jsonObject.put("firstImage", android.util.Base64.encodeToString(fromFileToBytes(firstPathFile), android.util.Base64.DEFAULT));
-        jsonObject.put("secondImage", android.util.Base64.encodeToString(fromFileToBytes(secondPathFile), android.util.Base64.DEFAULT));
-        socket = new Socket(hostname, port);
-        outputStream = socket.getOutputStream();
-        outputStream.write(jsonObject.toString().getBytes());
-        socket.close();
-        subscriber.onNext(false);
+        FileOutputStream out = new FileOutputStream(file);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+        subscriber.onNext(true);
         subscriber.onComplete();
       } catch (Throwable e) {
         subscriber.onError(e);
@@ -120,14 +139,14 @@ public class TakePicturesActivity extends AppCompatActivity {
     });
   }
 
-  public void doneProcessing(Boolean result) {
-      //done
+  public void doneProcessing() {
+    setResult(RESULT_OK);
+    finish();
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-
     camera.start();
   }
 

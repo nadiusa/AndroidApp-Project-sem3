@@ -9,9 +9,11 @@ import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 
 import static android.content.Context.MODE_PRIVATE;
+import static utm.scanid.MainActivity.CUSTOM_IMAGE_SELECTION_PARAM;
 import static utm.scanid.MainActivity.DEFAULT_IP_ADDRESS;
 import static utm.scanid.MainActivity.IP_ADDRESS_PARAM;
 import static utm.scanid.MainActivity.PORT_ADDRESS_PARAM;
@@ -27,14 +29,16 @@ public class SettingsDialog extends DialogFragment {
     View view = inflater.inflate(R.layout.settings_dialog, null);
     EditText ipAddress = view.findViewById(R.id.ip_address);
     EditText ipPort = view.findViewById(R.id.port_field);
+    CheckBox checkBox = view.findViewById(R.id.custom_image_select);
     String ipAddressValue = getIpAddress(getActivity());
     ipAddress.setText(ipAddressValue);
     ipAddress.setSelection(ipAddressValue.length());
     ipPort.setText(String.valueOf(getPort(getActivity())));
+    checkBox.setChecked(isCustomCameraSelected(getActivity()));
+
     builder.setView(view)
-        // Add action buttons
         .setPositiveButton(R.string.set_label,
-            (dialog, id) -> saveSettings(ipAddress, ipPort))
+            (dialog, id) -> saveSettings(ipAddress, ipPort, checkBox.isChecked()))
         .setNegativeButton(R.string.cancel_label, (dialog, id) -> dialog.dismiss());
     return builder.create();
   }
@@ -50,7 +54,12 @@ public class SettingsDialog extends DialogFragment {
     return settings.getInt(PORT_ADDRESS_PARAM, SERVER_PORT);
   }
 
-  public void saveSettings(EditText ipAddress, EditText port) {
+  public static boolean isCustomCameraSelected(Activity activity) {
+    SharedPreferences settings = activity.getSharedPreferences(SETTINGS_SHARED_PREFERENCES, MODE_PRIVATE);
+    return settings.getBoolean(CUSTOM_IMAGE_SELECTION_PARAM, false);
+  }
+
+  public void saveSettings(EditText ipAddress, EditText port, boolean useCustomImageSelection) {
     if (!TextUtils.isEmpty(ipAddress.getText().toString()) && !TextUtils.isEmpty(port.getText().toString())) {
       final String ipAddressValue = ipAddress.getText().toString();
       final Integer portValue = Integer.valueOf(port.getText().toString());
@@ -58,6 +67,7 @@ public class SettingsDialog extends DialogFragment {
         SharedPreferences settings = getActivity().getSharedPreferences(SETTINGS_SHARED_PREFERENCES, MODE_PRIVATE);
         settings.edit().putString(IP_ADDRESS_PARAM, ipAddressValue).apply();
         settings.edit().putInt(PORT_ADDRESS_PARAM, portValue).apply();
+        settings.edit().putBoolean(CUSTOM_IMAGE_SELECTION_PARAM, useCustomImageSelection).apply();
       }
     }
   }

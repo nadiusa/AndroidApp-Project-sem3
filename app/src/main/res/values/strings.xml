@@ -12,4 +12,5 @@
   <string name="port_label">Port</string>
   <string name="set_label">Set</string>
   <string name="cancel_label">Cancel</string>
+  <string name="use_custom_image_selection">Use custom image selection</string>
 </resources>

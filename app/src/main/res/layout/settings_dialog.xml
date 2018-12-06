@@ -26,4 +26,16 @@
       android:layout_marginBottom="16dp"
       android:fontFamily="sans-serif"
       android:hint="@string/port_label"/>
+
+  <CheckBox
+      android:id="@+id/custom_image_select"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="4dp"
+      android:layout_marginLeft="4dp"
+      android:layout_marginRight="4dp"
+      android:layout_marginBottom="16dp"
+      android:fontFamily="sans-serif"
+      android:hint="@string/use_custom_image_selection"/>
+
 </LinearLayout>
