@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 
 public class OpenImage extends AppCompatActivity {
@@ -32,7 +33,9 @@ public class OpenImage extends AppCompatActivity {
         if (uri != null) {
             Glide.with(this)
                     .load(uri.toString())
-                    .apply(new RequestOptions().placeholder(R.drawable.ic_camera))
+                    .apply(new RequestOptions().placeholder(R.drawable.ic_camera)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true))
                     .into(imageView);
         }
     }

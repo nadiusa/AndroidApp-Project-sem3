@@ -21,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -30,11 +31,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 import org.json.JSONObject;
 
+import static utm.scanid.FileUtils.deleteAllFilesInDir;
+import static utm.scanid.FileUtils.deleteCache;
+import static utm.scanid.FileUtils.deleteDir;
+import static utm.scanid.FileUtils.deleteFilesWithName;
 import static utm.scanid.FileUtils.fromFileToBytes;
 import static utm.scanid.SettingsDialog.getIpAddress;
 import static utm.scanid.SettingsDialog.getPort;
@@ -101,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void takeFrontImageIntent() {
     try {
-      File photoFile = createImageFile();
+      File photoFile = createImageFile("front_image");
       frontPhotoFilePath = photoFile.getAbsolutePath();
       Uri photoURI = FileProvider.getUriForFile(this, "utm.scanid", photoFile);
       Intent takePictureIntent;
@@ -119,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void takeBackCardImageIntent() {
     try {
-      File photoFile = createImageFile();
+      File photoFile = createImageFile("back_image");
       backPhotoFilePath = photoFile.getAbsolutePath();
       Uri photoURI = FileProvider.getUriForFile(this, "utm.scanid", photoFile);
       Intent takePictureIntent;
@@ -135,10 +137,10 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private File createImageFile() throws IOException {
-    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-    String imageFileName = "JPEG_" + timeStamp + "_";
+  private File createImageFile(String filename) throws IOException {
+    String imageFileName = "JPEG_" + filename + "_";
     File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    deleteFilesWithName(storageDir, imageFileName);
     return File.createTempFile(imageFileName, ".jpg", storageDir);
   }
 
@@ -208,7 +210,12 @@ public class MainActivity extends AppCompatActivity {
     if (!TextUtils.isEmpty(frontPhotoFilePath) && !TextUtils.isEmpty(backPhotoFilePath)) {
       sendToServerButton.setEnabled(true);
     }
-    Glide.with(this).load(pathImagePath).apply(new RequestOptions().placeholder(R.drawable.ic_camera)).into(imageView);
+    Glide.with(this)
+        .load(pathImagePath)
+        .apply(new RequestOptions().diskCacheStrategy(DiskCacheStrategy.NONE)
+            .skipMemoryCache(true)
+            .placeholder(R.drawable.ic_camera))
+        .into(imageView);
   }
 
   @Override
@@ -224,6 +231,13 @@ public class MainActivity extends AppCompatActivity {
       SettingsDialog settingsDialog = new SettingsDialog();
       settingsDialog.show(getSupportFragmentManager(), SETTINGS_TAG);
       return true;
+    } else if (id == R.id.clear_cache) {
+      clearCache();
+      sendToServerButton.setEnabled(false);
+      frontPhotoFilePath = null;
+      backPhotoFilePath = null;
+      frontCardIdView.setImageResource(R.drawable.ic_camera);
+      backCardIdView.setImageResource(R.drawable.ic_camera);
     }
     return super.onOptionsItemSelected(item);
   }
@@ -232,5 +246,22 @@ public class MainActivity extends AppCompatActivity {
     Intent intent = new Intent(this, OpenImage.class);
     intent.setData(Uri.fromFile(new File(uri)));
     startActivity(intent);
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    clearCache();
+  }
+
+  private void clearCache() {
+    deleteAllFilesInDir(getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+    if (frontPhotoFilePath != null) {
+      deleteDir(new File(frontPhotoFilePath));
+    }
+    if (backPhotoFilePath != null) {
+      deleteDir(new File(backPhotoFilePath));
+    }
+    deleteCache(this);
   }
 }

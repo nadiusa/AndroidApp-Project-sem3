@@ -5,12 +5,13 @@
     <string name="take_photo_label">Take photo</string>
     <string name="back_of_id_card_label">Back of ID card</string>
     <string name="front_card_of_id_label">Front of ID card</string>
-  <string name="loading_label">Loading. Please wait...</string>
-  <string name="imges_were_sent_successful">Id images were sent</string>
-  <string name="something_went_wrong_label">Something went wrong</string>
-  <string name="ip_address_label">IP Address</string>
-  <string name="port_label">Port</string>
-  <string name="set_label">Set</string>
-  <string name="cancel_label">Cancel</string>
-  <string name="use_custom_image_selection">Use custom image selection</string>
+    <string name="loading_label">Loading. Please wait...</string>
+    <string name="imges_were_sent_successful">Id images were sent</string>
+    <string name="something_went_wrong_label">Something went wrong</string>
+    <string name="ip_address_label">IP Address</string>
+    <string name="port_label">Port</string>
+    <string name="set_label">Set</string>
+    <string name="cancel_label">Cancel</string>
+    <string name="use_custom_image_selection">Use custom image selection</string>
+    <string name="clear_cache_label">Clear cache</string>
 </resources>
