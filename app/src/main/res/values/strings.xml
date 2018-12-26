@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">ReadIDcard</string>
     <string name="action_settings">Settings</string>
-    <string name="scan_id_label">Scan Id</string>
+    <string name="scan_id_label"> Send </string>
     <string name="take_photo_label">Take photo</string>
     <string name="back_of_id_card_label">Back of ID card</string>
     <string name="front_card_of_id_label">Front of ID card</string>

@@ -87,11 +87,16 @@ public class MainActivity extends AppCompatActivity {
     View backCard = findViewById(R.id.back_card);
     frontCard.setOnClickListener(view -> {
       if (!TextUtils.isEmpty(frontPhotoFilePath)) {
+//          if(frontCardIdView.getHeight() < frontCardIdView.getWidth()){
+//              frontCardIdView.setRotation(90);
+//          }
         showImage(frontPhotoFilePath);
       }
     });
     backCard.setOnClickListener(view -> {
       if (!TextUtils.isEmpty(backPhotoFilePath)) {
+//          if(backCardIdView.getHeight() < backCardIdView.getWidth())
+//              backCardIdView.setRotation(90);
         showImage(backPhotoFilePath);
       }
     });
