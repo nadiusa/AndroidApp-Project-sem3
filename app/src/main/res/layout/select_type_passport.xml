@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:id="@+id/scrollView2"
+        android:layout_width="393dp"
+        android:layout_height="413dp"
+        app:layout_constraintEnd_toEndOf="@+id/confirm"
+        app:layout_constraintHorizontal_bias="0.494"
+        app:layout_constraintStart_toStartOf="@+id/confirm">
+
+        <LinearLayout
+            android:layout_width="400dp"
+            android:layout_height="190dp"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="204dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="13dp"
+                android:text="@string/select_type_label"
+                android:textColor="#000"
+                android:textSize="20dp" />
+
+
+            <ImageButton
+                android:id="@+id/imageButton"
+                android:layout_width="284dp"
+                android:layout_height="202dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="16dp"
+                android:scaleType="fitCenter"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/cancel"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0"
+                app:srcCompat="@drawable/default_type_img" />
+
+            <ImageButton
+                android:id="@+id/imageButton2"
+                android:layout_width="284dp"
+                android:layout_height="202dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="16dp"
+                android:scaleType="fitCenter"
+                app:layout_constraintBottom_toTopOf="@+id/confirm"
+                app:layout_constraintStart_toStartOf="@+id/confirm"
+                app:srcCompat="@drawable/new_type_img" />
+
+            <ImageButton
+                android:id="@+id/imageButton3"
+                android:layout_width="284dp"
+                android:layout_height="202dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="16dp"
+                android:scaleType="fitCenter"
+                app:layout_constraintBottom_toTopOf="@+id/confirm"
+                app:layout_constraintStart_toStartOf="@+id/confirm"
+                app:srcCompat="@drawable/second_passport_type" />
+        </LinearLayout>
+
+    </ScrollView>
+
+    <Button
+        android:id="@+id/confirm"
+        android:layout_width="102dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="140dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/confirm_label"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+
+
+
+</android.support.constraint.ConstraintLayout>

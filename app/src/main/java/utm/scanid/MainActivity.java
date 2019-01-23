@@ -10,15 +10,19 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.support.v7.app.ActionBar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -48,8 +52,9 @@ public class MainActivity extends AppCompatActivity {
   public static final String DEFAULT_IP_ADDRESS = "192.168.103.158";
   static final int REQUEST_IMAGE_CAPTURE_FRONT = 1;
   static final int REQUEST_IMAGE_CAPTURE_BACK = 2;
-  static final String FIRST_IMAGE_ID = "firstImage";
-  static final String SECOND_IMAGE_ID = "secondImage";
+  static final String FIRST_IMAGE_ID = "frontImage";
+  static final String SECOND_IMAGE_ID = "backImage";
+  static final String TYPE_ID = "type";
   static final String SETTINGS_SHARED_PREFERENCES = "settings_shared_preferences";
   static final String IP_ADDRESS_PARAM = "ip_address";
   static final String PORT_ADDRESS_PARAM = "port_param";
@@ -81,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     progressBar.setVisibility(View.GONE);
     frontCardImage.setOnClickListener(view -> takeFrontImageIntent());
     backCardImage.setOnClickListener(view -> takeBackCardImageIntent());
-    sendToServerButton.setOnClickListener(view -> sendToServer());
+    sendToServerButton.setOnClickListener(view -> showSelectDialog());
     sendToServerButton.setEnabled(false);
     View frontCard = findViewById(R.id.front_card);
     View backCard = findViewById(R.id.back_card);
@@ -149,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
     return File.createTempFile(imageFileName, ".jpg", storageDir);
   }
 
-  private void sendToServer() {
-    compositeDisposable.add(sendImageToServer(frontPhotoFilePath, backPhotoFilePath).subscribeOn(Schedulers.io())
+  private void sendToServer(String type) {
+    compositeDisposable.add(sendImageToServer(frontPhotoFilePath, backPhotoFilePath, type).subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .doOnSubscribe(disposable -> onLoad())
         .doOnTerminate(this::onLoadComplete)
@@ -177,7 +182,33 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  public Observable<Boolean> sendImageToServer(String firstPhotoPath, String secondPhotoPath) {
+  public void showSelectDialog() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    LayoutInflater inflater = getLayoutInflater();
+    View view = inflater.inflate(R.layout.select_id_dialog, null);
+    RadioGroup radioGroup = view.findViewById(R.id.idRadioGroup);
+    builder.setTitle(R.string.select_id_type_label)
+            .setView(view)
+            .setPositiveButton("ok", (dialog, id) -> {
+              final int selectedId = radioGroup.getCheckedRadioButtonId();
+              switch(selectedId){
+                case R.id.first_type:
+                  sendToServer("1");
+                  break;
+                case R.id.second_type:
+                  sendToServer("2");
+                  break;
+                  case R.id.third_type:
+                    sendToServer("3");
+              }
+            })
+            .setNegativeButton("cancel", (dialog, id) -> {
+              //do nothing
+            });
+
+    builder.create().show();
+  }
+  public Observable<Boolean> sendImageToServer(String firstPhotoPath, String secondPhotoPath, String type) {
     return Observable.create(subscriber -> {
       try {
         File firstPathFile = new File(firstPhotoPath);
@@ -189,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
             android.util.Base64.encodeToString(fromFileToBytes(firstPathFile), android.util.Base64.DEFAULT));
         jsonObject.put(SECOND_IMAGE_ID,
             android.util.Base64.encodeToString(fromFileToBytes(secondPathFile), android.util.Base64.DEFAULT));
+        jsonObject.put(TYPE_ID, type);
         String ipAddress = getIpAddress(this);
         int port = getPort(this);
         socket = new Socket(ipAddress, port);

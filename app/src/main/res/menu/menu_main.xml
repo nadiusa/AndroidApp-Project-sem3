@@ -13,4 +13,5 @@
         android:orderInCategory="101"
         android:title="@string/clear_cache_label"
         app:showAsAction="never" />
+
 </menu>
